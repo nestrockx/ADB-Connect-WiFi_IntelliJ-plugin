@@ -5,6 +5,8 @@ import java.io.File
 import java.io.InputStreamReader
 import java.util.concurrent.TimeUnit
 
+class AdbException(message: String) : Exception(message)
+
 object AdbUtils {
 
     private fun findAdb(): File? {
@@ -25,7 +27,7 @@ object AdbUtils {
         return findAdb()?.path ?: throw RuntimeException("ADB not found. Please install Android SDK / platform-tools.")
     }
 
-    private fun runAdbCommand(vararg args: String, timeout: Long = 10): String {
+    private fun runAdbCommand(vararg args: String, timeout: Long = 2): String {
         val adbPath = getAdbPath()
         val process = ProcessBuilder(adbPath, *args).start()
 
@@ -33,7 +35,8 @@ object AdbUtils {
             BufferedReader(InputStreamReader(process.inputStream)).readText()
         } else {
             process.destroy()
-            throw RuntimeException("ADB timed out after $timeout seconds")
+            throw AdbException("ADB timed out after $timeout seconds.")
+//            throw RuntimeException("ADB timed out after $timeout seconds")
         }
     }
 

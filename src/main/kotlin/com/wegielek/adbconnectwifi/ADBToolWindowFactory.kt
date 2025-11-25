@@ -7,12 +7,10 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.content.ContentFactory
-import javax.swing.JButton
 import javax.swing.SwingUtilities
+import com.intellij.openapi.ui.Messages
 
 class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
-
-
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         fun refresh() {
@@ -40,21 +38,29 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                 label(device.deviceId.split(" ")[0])
                                 if (!isConnected) {
                                     button("Connect") {
-                                        val result = AdbUtils.connectOverWifi(device.deviceIp)
-                                        com.intellij.openapi.ui.Messages.showInfoMessage(
-                                            "Connected to ${device.deviceId} at ${device.deviceIp}\n$result",
-                                            "ADB Wi-Fi"
-                                        )
-                                        refresh()
+                                        try {
+                                            val result = AdbUtils.connectOverWifi(device.deviceIp)
+                                            Messages.showInfoMessage(
+                                                "Connected to ${device.deviceId} at ${device.deviceIp}\n$result",
+                                                "ADB Wi-Fi"
+                                            )
+                                            refresh()
+                                        } catch (ex: AdbException) {
+                                            Messages.showErrorDialog(ex.message, "ADB Error")
+                                        }
                                     }
                                 } else {
-                                    button("Disconnect") {
-                                        val result = AdbUtils.disconnectOverWifi(device.deviceIp)
-                                        com.intellij.openapi.ui.Messages.showInfoMessage(
-                                            "Disconnected from ${device.deviceId} at ${device.deviceIp}\n$result",
-                                            "ADB Wi-Fi"
-                                        )
-                                        refresh()
+                                    try {
+                                        button("Disconnect") {
+                                            val result = AdbUtils.disconnectOverWifi(device.deviceIp)
+                                            Messages.showInfoMessage(
+                                                "Disconnected from ${device.deviceId} at ${device.deviceIp}\n$result",
+                                                "ADB Wi-Fi"
+                                            )
+                                            refresh()
+                                        }
+                                    } catch (ex: AdbException) {
+                                        Messages.showErrorDialog(ex.message, "ADB Error")
                                     }
                                 }
                             }
@@ -73,29 +79,33 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                             }
                             val id = device.substringAfter("(").substringBefore(")")
                             row {
-                                label(device)
-                                button("Connect Wi-Fi") {
-                                    AdbUtils.enableTcpIp(id)
-                                    Thread.sleep(500)
-                                    val ip = AdbUtils.getDeviceIp(id)
-                                    if (ip != null) {
-                                        val result = AdbUtils.connectOverWifi(ip)
-                                        service.saveDevice("$device [saved]", ip)
-                                        com.intellij.openapi.ui.Messages.showInfoMessage(
-                                            "Connected to $device at $ip\n$result",
-                                            "ADB Wi-Fi"
-                                        )
-                                    } else {
-                                        com.intellij.openapi.ui.Messages.showErrorDialog(
-                                            "Could not get IP for $device",
-                                            "ADB Wi-Fi Error"
-                                        )
+                                label(device.split(" ")[0])
+                                try {
+                                    button("Connect Wi-Fi") {
+                                        AdbUtils.enableTcpIp(id)
+                                        Thread.sleep(500)
+                                        val ip = AdbUtils.getDeviceIp(id)
+                                        if (ip != null) {
+                                            val result = AdbUtils.connectOverWifi(ip)
+                                            service.saveDevice("$device [saved]", ip)
+                                            com.intellij.openapi.ui.Messages.showInfoMessage(
+                                                "Connected to $device at $ip\n$result",
+                                                "ADB Wi-Fi"
+                                            )
+                                        } else {
+                                            com.intellij.openapi.ui.Messages.showErrorDialog(
+                                                "Could not get IP for $device",
+                                                "ADB Wi-Fi Error"
+                                            )
+                                        }
+                                        // refresh UI after action
+                                        SwingUtilities.invokeLater {
+                                            toolWindow.contentManager.removeAllContents(true)
+                                            createToolWindowContent(project, toolWindow)
+                                        }
                                     }
-                                    // refresh UI after action
-                                    SwingUtilities.invokeLater {
-                                        toolWindow.contentManager.removeAllContents(true)
-                                        createToolWindowContent(project, toolWindow)
-                                    }
+                                } catch (ex: AdbException) {
+                                    Messages.showErrorDialog(ex.message, "ADB Error")
                                 }
                             }
                         }
