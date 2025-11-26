@@ -88,12 +88,16 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                         if (ip != null) {
                                             val result = AdbUtils.connectOverWifi(ip)
                                             service.saveDevice("$device [saved]", ip)
-                                            com.intellij.openapi.ui.Messages.showInfoMessage(
+                                            Messages.showInfoMessage(
                                                 "Connected to $device at $ip\n$result",
                                                 "ADB Wi-Fi"
                                             )
+                                            Messages.showInfoMessage(
+                                                "Your device is now connected over Wi-Fi.\nYou can safely unplug the USB cable.\nNext time you can connect without USB.",
+                                                "ADB Wi-Fi"
+                                            )
                                         } else {
-                                            com.intellij.openapi.ui.Messages.showErrorDialog(
+                                            Messages.showErrorDialog(
                                                 "Could not get IP for $device",
                                                 "ADB Wi-Fi Error"
                                             )
