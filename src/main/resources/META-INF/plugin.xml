@@ -12,9 +12,18 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>
-        Connect your android phone to the IDE via ADB Wifi connection.
-    </description>
+    <description><![CDATA[
+    <h2>ADB Connect over WiFi</h2>
+    <p>This plugin lets you quickly connect your Android device over WiFi.</p>
+    <ol>
+      <li>Enable developer mode on you android phone</li>
+      <li>Connect the phone to the same WiFi network</li>
+      <li>Connect the phone via USB cable(only the first time or when your device IP changes)</li>
+      <li>Use the plugin from sidebar to connect your phone wirelessly</li>
+      <li>Unplug the USB cable</li>
+      <li>From now on you'll be able to connect and disconnect your phone wirelessly</li>
+    </ol>
+    ]]></description>
 
     <actions>
         <action id="ConnectAdbWifi"

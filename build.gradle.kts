@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.wegielek"
-version = "1.0-SNAPSHOT"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -36,6 +36,11 @@ intellijPlatform {
         changeNotes = """
             Initial version
         """.trimIndent()
+    }
+    publishing {
+        token.set(providers.environmentVariable("JB_MARKETPLACE_TOKEN"))
+        // If you want to upload a new version of existing plugin:
+        // channels.set(listOf("default"))
     }
 }
 
