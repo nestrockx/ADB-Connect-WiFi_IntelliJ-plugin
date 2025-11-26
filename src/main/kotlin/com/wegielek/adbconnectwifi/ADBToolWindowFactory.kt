@@ -46,7 +46,7 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                             )
                                             refresh()
                                         } catch (ex: AdbException) {
-                                            Messages.showErrorDialog(ex.message, "ADB Error")
+                                            Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
                                         }
                                     }
                                 } else {
@@ -60,7 +60,7 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                             refresh()
                                         }
                                     } catch (ex: AdbException) {
-                                        Messages.showErrorDialog(ex.message, "ADB Error")
+                                        Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
                                     }
                                 }
                             }
@@ -98,7 +98,7 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                             )
                                         } else {
                                             Messages.showErrorDialog(
-                                                "Could not get IP for $device",
+                                                "Could not get IP for $device\nPlease check your internet connection",
                                                 "ADB Wi-Fi Error"
                                             )
                                         }
@@ -109,7 +109,7 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                         }
                                     }
                                 } catch (ex: AdbException) {
-                                    Messages.showErrorDialog(ex.message, "ADB Error")
+                                    Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
                                 }
                             }
                         }
