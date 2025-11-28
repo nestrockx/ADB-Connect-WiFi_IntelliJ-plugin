@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.wegielek"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,8 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
+            1. Initial version
+            2. Fix connection delay bug
         """.trimIndent()
     }
     publishing {
@@ -51,7 +52,7 @@ tasks {
         targetCompatibility = "21"
     }
     patchPluginXml{
-        version = "1.0.2"
+        version = "1.0.3"
     }
 }
 

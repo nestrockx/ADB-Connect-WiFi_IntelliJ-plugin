@@ -85,7 +85,7 @@ class ADBConnectWiFiAction : AnAction() {
             // Enable TCP/IP mode
             AdbUtils.enableTcpIp(deviceId.substringAfter("(").substringBefore(")"))
 
-            Thread.sleep(1000)
+            Thread.sleep(1500)
 
             // Get device IP automatically
             val ip = AdbUtils.getDeviceIp(deviceId.substringAfter("(").substringBefore(")"))

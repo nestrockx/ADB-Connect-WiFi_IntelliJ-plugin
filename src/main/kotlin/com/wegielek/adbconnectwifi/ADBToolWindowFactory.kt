@@ -83,7 +83,7 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
                                 try {
                                     button("Connect Wi-Fi") {
                                         AdbUtils.enableTcpIp(id)
-                                        Thread.sleep(500)
+                                        Thread.sleep(1500)
                                         val ip = AdbUtils.getDeviceIp(id)
                                         if (ip != null) {
                                             val result = AdbUtils.connectOverWifi(ip)
