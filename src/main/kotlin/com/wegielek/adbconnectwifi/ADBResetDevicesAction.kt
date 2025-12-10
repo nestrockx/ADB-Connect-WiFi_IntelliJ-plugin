@@ -14,9 +14,9 @@ class ADBResetDevicesAction: AnAction() {
                 AdbUtils.disconnectOverWifi(device.deviceIp)
             }
             service.clearDevices()
-        } catch (e: Exception) {
-            Messages.showErrorDialog(e.message, "ADB Wi-Fi Error")
+        } catch (_: Exception) {
+            // Ignore errors during disconnect
         }
-        Messages.showInfoMessage("Removed all save devices.", "Reset Devices")
+        Messages.showInfoMessage("All saved devices removed.", "ADB Wi-Fi")
     }
 }

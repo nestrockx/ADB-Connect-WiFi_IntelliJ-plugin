@@ -13,7 +13,7 @@ class ADBDisconnectWiFiAction : AnAction() {
 
             val deviceId = Messages.showEditableChooseDialog(
                 "Select device to disconnect",
-                "ADB Wi-Fi Connector",
+                "ADB Wi-Fi",
                 Messages.getQuestionIcon(),
                 savedDevices.map { it.deviceId }.toTypedArray(),
                 savedDevices.first().deviceId,
@@ -24,11 +24,11 @@ class ADBDisconnectWiFiAction : AnAction() {
 
             val result = deviceIp?.let { AdbUtils.disconnectOverWifi(it) }
             result?.let {
-                Messages.showInfoMessage("Disconnected from $deviceId at $deviceIp\nResult: $it", "ADB Wi-Fi Success")
+                Messages.showInfoMessage("Disconnected from $deviceId at $deviceIp\nResult: $it", "ADB Wi-Fi")
             }
 
         } catch (ex: Exception) {
-            Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
+            Messages.showErrorDialog(ex.message ?: "Unknown error", "ADB Wi-Fi Error")
         }
     }
 }

@@ -26,21 +26,6 @@
     ]]></description>
 
     <actions>
-        <action id="ConnectAdbWifi"
-                class="com.wegielek.adbconnectwifi.ADBConnectWiFiAction"
-                text="Connect Phone Debugging over Wi-Fi"
-                description="Connect your Android phone to ADB via Wi-Fi"/>
-
-        <action id="DisconnectAdbWifi"
-                class="com.wegielek.adbconnectwifi.ADBDisconnectWiFiAction"
-                text="Disconnect Debugging over Wi-Fi"
-                description="Disconnect your Android phone from ADB via Wi-Fi"/>
-
-        <action id="ResetDevices"
-                class="com.wegielek.adbconnectwifi.ADBResetDevicesAction"
-                text="Remove All Saved Devices"
-                description="Remove all your saved Android devices"/>
-
         <!-- Add a top-level menu -->
         <group id="ConnectAdbWifi.Menu"
                text="ADB Wi-Fi"

@@ -7,135 +7,65 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.content.ContentFactory
-import javax.swing.SwingUtilities
 import com.intellij.openapi.ui.Messages
+import javax.swing.SwingUtilities
 
 class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        fun refresh() {
+        val deviceService = service<DeviceIpService>()
+
+        val content = ContentFactory.getInstance()
+            .createContent(createUI(deviceService, toolWindow, project), "", false)
+        toolWindow.contentManager.addContent(content)
+    }
+
+    private fun createUI(
+        deviceService: DeviceIpService,
+        toolWindow: ToolWindow,
+        project: Project
+    ) = panel {
+        fun refreshUI() {
             SwingUtilities.invokeLater {
                 toolWindow.contentManager.removeAllContents(true)
                 createToolWindowContent(project, toolWindow)
             }
         }
 
-        val service = service<DeviceIpService>()
+        fun showInfo(message: String) = Messages.showInfoMessage(message, "ADB Wi-Fi")
+        fun showError(message: String) = Messages.showErrorDialog(message, "ADB Wi-Fi Error")
 
-        fun refreshUi(): javax.swing.JComponent {
-            val savedDevices = service.getAllDevices()
-            val usbDevices = AdbUtils.getConnectedDevices()
-                .map { id -> AdbUtils.getDeviceModel(id).trim() + " ($id)" }
+        val savedDevices = deviceService.getAllDevices()
+        val usbDevices = AdbUtils.getConnectedDevices()
+            .map { id -> "${AdbUtils.getDeviceModel(id).trim()} ($id)" }
 
-            return panel {
-                group("Saved Devices") {
-                    if (savedDevices.isEmpty()) {
-                        row { label("No saved devices") }
-                    } else {
-                        for (device in savedDevices) {
-                            val isConnected = AdbUtils.isDeviceConnected(device.deviceIp)
-                            row {
-                                label(device.deviceId.split(" ")[0])
-                                if (!isConnected) {
-                                    button("Connect") {
-                                        try {
-                                            val result = AdbUtils.connectOverWifi(device.deviceIp)
-                                            Messages.showInfoMessage(
-                                                "Connected to ${device.deviceId} at ${device.deviceIp}\n$result",
-                                                "ADB Wi-Fi"
-                                            )
-                                            refresh()
-                                        } catch (ex: AdbException) {
-                                            Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
-                                        }
-                                    }
-                                } else {
-                                    try {
-                                        button("Disconnect") {
-                                            val result = AdbUtils.disconnectOverWifi(device.deviceIp)
-                                            Messages.showInfoMessage(
-                                                "Disconnected from ${device.deviceId} at ${device.deviceIp}\n$result",
-                                                "ADB Wi-Fi"
-                                            )
-                                            refresh()
-                                        }
-                                    } catch (ex: AdbException) {
-                                        Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                group("USB Devices") {
-                    if (usbDevices.isEmpty()) {
-                        row { label("No devices connected via USB") }
-                    } else {
-                        for (device in usbDevices) {
-                            val regex = Regex("\\(\\d+\\.\\d+\\.\\d+\\.\\d+:\\d+\\)")
-                            if (regex.find(device) != null) {
-                                continue
-                            }
-                            val id = device.substringAfter("(").substringBefore(")")
-                            row {
-                                label(device.split(" ")[0])
-                                try {
-                                    button("Connect Wi-Fi") {
-                                        AdbUtils.enableTcpIp(id)
-                                        Thread.sleep(1500)
-                                        val ip = AdbUtils.getDeviceIp(id)
-                                        if (ip != null) {
-                                            val result = AdbUtils.connectOverWifi(ip)
-                                            service.saveDevice("$device [saved]", ip)
-                                            Messages.showInfoMessage(
-                                                "Connected to $device at $ip\n$result",
-                                                "ADB Wi-Fi"
-                                            )
-                                            Messages.showInfoMessage(
-                                                "Your device is now connected over Wi-Fi.\nYou can safely unplug the USB cable.\nNext time you can connect without USB.",
-                                                "ADB Wi-Fi"
-                                            )
-                                        } else {
-                                            Messages.showErrorDialog(
-                                                "Could not get IP for $device\nPlease check your internet connection",
-                                                "ADB Wi-Fi Error"
-                                            )
-                                        }
-                                        // refresh UI after action
-                                        SwingUtilities.invokeLater {
-                                            toolWindow.contentManager.removeAllContents(true)
-                                            createToolWindowContent(project, toolWindow)
-                                        }
-                                    }
-                                } catch (ex: AdbException) {
-                                    Messages.showErrorDialog(ex.message, "ADB Wi-Fi Error")
-                                }
-                            }
-                        }
-                    }
-                }
-
-                group("Actions") {
+        group("Saved Devices") {
+            if (savedDevices.isEmpty()) {
+                row { label("No saved devices") }
+            } else {
+                for (device in savedDevices) {
+                    val isConnected = AdbUtils.isDeviceConnected(device.deviceIp)
                     row {
-                        button("Forget All Devices") {
-                            for (device in savedDevices) {
-                                AdbUtils.disconnectOverWifi(device.deviceIp)
+                        label(device.deviceId.split(" ")[0])
+                        if (!isConnected) {
+                            button("Connect") {
+                                try {
+                                    val result = AdbUtils.connectOverWifi(device.deviceIp)
+                                    showInfo("Connected to ${device.deviceId} at ${device.deviceIp}\n$result")
+                                    refreshUI()
+                                } catch (ex: AdbException) {
+                                    showError(ex.message ?: "Unknown error")
+                                }
                             }
-                            service.clearDevices()
-                            com.intellij.openapi.ui.Messages.showInfoMessage(
-                                "All saved devices removed.",
-                                "ADB Wi-Fi"
-                            )
-                            SwingUtilities.invokeLater {
-                                toolWindow.contentManager.removeAllContents(true)
-                                createToolWindowContent(project, toolWindow)
-                            }
-                        }
-                        button("Refresh") {
-                            SwingUtilities.invokeLater {
-                                toolWindow.contentManager.removeAllContents(true)
-                                createToolWindowContent(project, toolWindow)
+                        } else {
+                            button("Disconnect") {
+                                try {
+                                    val result = AdbUtils.disconnectOverWifi(device.deviceIp)
+                                    showInfo("Disconnected from ${device.deviceId} at ${device.deviceIp}\n$result")
+                                    refreshUI()
+                                } catch (ex: AdbException) {
+                                    showError(ex.message ?: "Unknown error")
+                                }
                             }
                         }
                     }
@@ -143,7 +73,61 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
             }
         }
 
-        val content = ContentFactory.getInstance().createContent(refreshUi(), "", false)
-        toolWindow.contentManager.addContent(content)
+        group("USB Devices") {
+            if (usbDevices.isEmpty()) {
+                row { label("No devices connected via USB") }
+            } else {
+                for (device in usbDevices) {
+                    // Skip devices already connected via Wi-Fi
+                    if (Regex("\\(\\d+\\.\\d+\\.\\d+\\.\\d+:\\d+\\)").find(device) != null) continue
+
+                    val id = device.substringAfter("(").substringBefore(")")
+                    row {
+                        label(device.split(" ")[0])
+                        button("Connect Wi-Fi") {
+                            try {
+                                AdbUtils.enableTcpIp(id)
+                                Thread.sleep(1500)
+                                val ip = AdbUtils.getDeviceIp(id)
+                                if (ip != null) {
+                                    val result = AdbUtils.connectOverWifi(ip)
+                                    deviceService.saveDevice("$device [saved]", ip)
+                                    showInfo("Connected to $device at $ip\n$result")
+                                    showInfo(
+                                        "Your device is now connected over Wi-Fi.\n" +
+                                                "You can safely unplug the USB cable.\n" +
+                                                "Next time you can connect without USB."
+                                    )
+                                } else {
+                                    showError("Could not get IP for $device\nPlease check your internet connection")
+                                }
+                                refreshUI()
+                            } catch (ex: AdbException) {
+                                showError(ex.message ?: "Unknown error")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        group("Actions") {
+            row {
+                button("Forget All Devices") {
+                    for (device in savedDevices) {
+                        try {
+                            AdbUtils.disconnectOverWifi(device.deviceIp)
+                        } catch (_: Exception) {
+                            // Ignore errors during disconnect
+                        }
+                    }
+                    deviceService.clearDevices()
+                    showInfo("All saved devices removed.")
+                    refreshUI()
+                }
+
+                button("Refresh") { refreshUI() }
+            }
+        }
     }
 }
