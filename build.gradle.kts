@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.wegielek"
-version = "1.0.3"
+version = "1.0.4"
 
 repositories {
     mavenCentral()
@@ -36,6 +36,7 @@ intellijPlatform {
         changeNotes = """
             1. Initial version
             2. Fix connection delay bug
+            3. Fix restart required bug
         """.trimIndent()
     }
     publishing {
@@ -52,7 +53,7 @@ tasks {
         targetCompatibility = "21"
     }
     patchPluginXml{
-        version = "1.0.3"
+        version = "1.0.4"
     }
 }
 
