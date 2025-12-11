@@ -1,5 +1,6 @@
 package com.wegielek.adbconnectwifi
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -12,12 +13,30 @@ import javax.swing.SwingUtilities
 
 class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
 
+//    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+//        val deviceService = service<DeviceIpService>()
+//
+//        val content = ContentFactory.getInstance()
+//            .createContent(createUI(deviceService, toolWindow, project), "", false)
+//        toolWindow.contentManager.addContent(content)
+//    }
+
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val deviceService = service<DeviceIpService>()
 
-        val content = ContentFactory.getInstance()
-            .createContent(createUI(deviceService, toolWindow, project), "", false)
-        toolWindow.contentManager.addContent(content)
+        val loadingContent = ContentFactory.getInstance()
+            .createContent(panel { row { label("Loading ADB WiFi plugin...") } }, "", false)
+        toolWindow.contentManager.addContent(loadingContent)
+
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val contentPanel = createUI(deviceService, toolWindow, project)
+
+            SwingUtilities.invokeLater {
+                toolWindow.contentManager.removeAllContents(true)
+                val content = ContentFactory.getInstance().createContent(contentPanel, "", false)
+                toolWindow.contentManager.addContent(content)
+            }
+        }
     }
 
     private fun createUI(
@@ -36,15 +55,26 @@ class ADBToolWindowFactory : ToolWindowFactory, DumbAware {
         fun showError(message: String) = Messages.showErrorDialog(message, "ADB Wi-Fi Error")
 
         val savedDevices = deviceService.getAllDevices()
-        val usbDevices = AdbUtils.getConnectedDevices()
-            .map { id -> "${AdbUtils.getDeviceModel(id).trim()} ($id)" }
+
+        val usbDevices: List<String> = try {
+            AdbUtils.getConnectedDevices()
+                .map { id -> "${AdbUtils.getDeviceModel(id).trim()} ($id)" }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            emptyList() // fallback
+        }
 
         group("Saved Devices") {
             if (savedDevices.isEmpty()) {
                 row { label("No saved devices") }
             } else {
                 for (device in savedDevices) {
-                    val isConnected = AdbUtils.isDeviceConnected(device.deviceIp)
+                    val isConnected = try {
+                        AdbUtils.isDeviceConnected(device.deviceIp)
+                    } catch (ex: AdbException) {
+                        ex.printStackTrace()
+                        false
+                    }
                     row {
                         label(device.deviceId.split(" ")[0])
                         if (!isConnected) {

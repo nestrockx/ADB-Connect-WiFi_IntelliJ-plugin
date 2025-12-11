@@ -36,7 +36,6 @@ object AdbUtils {
         } else {
             process.destroy()
             throw AdbException("ADB timed out after $timeout seconds.")
-//            throw RuntimeException("ADB timed out after $timeout seconds")
         }
     }
 
